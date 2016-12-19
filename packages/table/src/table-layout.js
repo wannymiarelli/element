@@ -8,6 +8,7 @@ class TableLayout {
     this.store = null;
     this.columns = null;
     this.fit = true;
+    this.showHeader = true;
 
     this.height = null;
     this.scrollX = false;
@@ -41,37 +42,55 @@ class TableLayout {
   }
 
   updateScrollY() {
+    const height = this.height;
+    if (typeof height !== 'string' && typeof height !== 'number') return;
     const bodyWrapper = this.table.$refs.bodyWrapper;
     if (this.table.$el && bodyWrapper) {
       const body = bodyWrapper.querySelector('.el-table__body');
-
       this.scrollY = body.offsetHeight > bodyWrapper.offsetHeight;
     }
   }
 
-  setHeight(height) {
-    if (typeof height === 'string' && /^\d+$/.test(height)) {
-      height = Number(height);
+  setHeight(value, prop = 'height') {
+    const el = this.table.$el;
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+      value = Number(value);
     }
 
-    this.height = height;
+    this.height = value;
 
-    const el = this.table.$el;
-    if (!isNaN(height) && el) {
-      el.style.height = height + 'px';
+    if (!el) return;
+    if (typeof value === 'number') {
+      el.style[prop] = value + 'px';
 
       this.updateHeight();
+    } else if (typeof value === 'string') {
+      this.updateHeight();
     }
+  }
+
+  setMaxHeight(value) {
+    return this.setHeight(value, 'max-height');
   }
 
   updateHeight() {
     const height = this.tableHeight = this.table.$el.clientHeight;
     const { headerWrapper } = this.table.$refs;
-    if (!headerWrapper) return;
-    const headerHeight = this.headerHeight = headerWrapper.offsetHeight;
-    const bodyHeight = height - headerHeight;
-    if (this.height !== null && !isNaN(this.height)) this.bodyHeight = bodyHeight;
-    this.fixedBodyHeight = this.scrollX ? bodyHeight - this.gutterWidth : bodyHeight;
+    if (this.showHeader && !headerWrapper) return;
+    if (!this.showHeader) {
+      this.headerHeight = 0;
+      if (this.height !== null && (!isNaN(this.height) || typeof this.height === 'string')) {
+        this.bodyHeight = height;
+      }
+      this.fixedBodyHeight = this.scrollX ? height - this.gutterWidth : height;
+    } else {
+      const headerHeight = this.headerHeight = headerWrapper.offsetHeight;
+      const bodyHeight = height - headerHeight;
+      if (this.height !== null && (!isNaN(this.height) || typeof this.height === 'string')) {
+        this.bodyHeight = bodyHeight;
+      }
+      this.fixedBodyHeight = this.scrollX ? bodyHeight - this.gutterWidth : bodyHeight;
+    }
     this.viewportHeight = this.scrollX ? height - this.gutterWidth : height;
   }
 
@@ -130,6 +149,8 @@ class TableLayout {
       flattenColumns.forEach((column) => {
         if (!column.width && !column.minWidth) {
           column.realWidth = 80;
+        } else {
+          column.realWidth = column.width || column.minWidth;
         }
 
         bodyMinWidth += column.realWidth;

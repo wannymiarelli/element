@@ -126,7 +126,7 @@ Popover 的属性与 Tooltip 很类似，它们都是基于`Vue-popper`开发的
   title="标题"
   width="200"
   trigger="hover"
-  content="这是一段容,这是一段容,这是一段容,这是一段容。">
+  content="这是一段内容,这是一段内容,这是一段内容,这是一段内容。">
 </el-popover>
 
 <el-popover
@@ -135,7 +135,7 @@ Popover 的属性与 Tooltip 很类似，它们都是基于`Vue-popper`开发的
   title="标题"
   width="200"
   trigger="click"
-  content="这是一段容,这是一段容,这是一段容,这是一段容。">
+  content="这是一段内容,这是一段内容,这是一段内容,这是一段内容。">
 </el-popover>
 
 <el-button v-popover:popover1>hover 激活</el-button>
@@ -145,7 +145,7 @@ Popover 的属性与 Tooltip 很类似，它们都是基于`Vue-popper`开发的
   title="标题"
   width="200"
   trigger="focus"
-  content="这是一段容,这是一段容,这是一段容,这是一段容。">
+  content="这是一段内容,这是一段内容,这是一段内容,这是一段内容。">
   <el-button slot="reference">focus 激活</el-button>
 </el-popover>
 ```
@@ -212,8 +212,8 @@ Popover 的属性与 Tooltip 很类似，它们都是基于`Vue-popper`开发的
   v-model="visible2">
   <p>这是一段内容这是一段内容确定删除吗？</p>
   <div style="text-align: right; margin: 0">
-    <el-button size="mini" type="text" @click.native="visible2 = false">取消</el-button>
-    <el-button type="primary" size="mini" @click.native="visible2 = false">确定</el-button>
+    <el-button size="mini" type="text" @click="visible2 = false">取消</el-button>
+    <el-button type="primary" size="mini" @click="visible2 = false">确定</el-button>
   </div>
 </el-popover>
 
@@ -251,3 +251,9 @@ Popover 的属性与 Tooltip 很类似，它们都是基于`Vue-popper`开发的
 |--- | ---|
 | — | Popover 内嵌 HTML 文本 |
 | reference | 触发 Popover 显示的 HTML 元素 |
+
+### Events
+| 事件名称 | 说明 | 回调参数 |
+|---------|--------|---------|
+| show | 显示时触发 | — |
+| hide | 隐藏时触发 | — |

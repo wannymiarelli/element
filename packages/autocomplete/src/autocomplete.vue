@@ -10,9 +10,16 @@
       @focus="handleFocus"
       @keydown.up.native="highlight(highlightedIndex - 1)"
       @keydown.down.native="highlight(highlightedIndex + 1)"
-      @keydown.enter.native="select(highlightedIndex)"
-    ></el-input>
-    <transition name="md-fade-bottom">
+      @keydown.enter.stop.native="select(highlightedIndex)"
+    >
+      <template slot="prepend" v-if="$slots.prepend">
+        <slot name="prepend"></slot>
+      </template>
+      <template slot="append" v-if="$slots.append">
+        <slot name="append"></slot>
+      </template> 
+    </el-input>
+    <transition name="el-zoom-in-top">
       <ul
         v-if="suggestionVisible"
         class="el-autocomplete__suggestions"

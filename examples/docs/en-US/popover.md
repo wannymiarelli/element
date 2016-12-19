@@ -185,8 +185,8 @@ Of course, you can nest other operations. It's more light-weight than using a di
   v-model="visible2">
   <p>Are you sure to delete this?</p>
   <div style="text-align: right; margin: 0">
-    <el-button size="mini" type="text" @click.native="visible2 = false">cancel</el-button>
-    <el-button type="primary" size="mini" @click.native="visible2 = false">confirm</el-button>
+    <el-button size="mini" type="text" @click="visible2 = false">cancel</el-button>
+    <el-button type="primary" size="mini" @click="visible2 = false">confirm</el-button>
   </div>
 </el-popover>
 
@@ -225,3 +225,8 @@ Of course, you can nest other operations. It's more light-weight than using a di
 | — | text content of popover |
 | reference | HTML element that triggers popover |
 
+### Events
+| Event Name | Description | 回调参数 |
+|---------|--------|---------|
+| show | triggers when popover shows | - |
+| hide | triggers when popover hides | - |

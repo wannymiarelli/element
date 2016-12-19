@@ -14,7 +14,8 @@
       return {
         children: null,
         activeTab: null,
-        currentName: 0
+        currentName: 0,
+        panes: []
       };
     },
 
@@ -38,12 +39,21 @@
           let nextChild = tabs[index];
           let prevChild = tabs[index - 1];
 
-          this.currentName = nextChild ? nextChild.index : prevChild ? prevChild.index : '-1';
+          while (prevChild && prevChild.disabled) {
+            prevChild = tabs[tabs.indexOf(prevChild) - 1];
+          }
+
+          this.currentName = nextChild
+            ? nextChild.index
+            : prevChild
+            ? prevChild.index
+            : '-1';
         }
         this.$emit('tab-remove', tab);
         this.$forceUpdate();
       },
       handleTabClick(tab, event) {
+        if (tab.disabled) return;
         this.currentName = tab.index;
         this.$emit('tab-click', tab, event);
       },
@@ -72,7 +82,7 @@
       }
     },
     mounted() {
-      this.currentName = this.activeName || this.$children[0].index || '1';
+      this.currentName = this.activeName || this.$children[0] && this.$children[0].index || '1';
       this.$nextTick(() => {
         this.$forceUpdate();
       });
@@ -80,7 +90,7 @@
     render(h) {
       let {
         type,
-        closable,
+        panes, // eslint-disable-line
         handleTabRemove,
         handleTabClick,
         currentName
@@ -103,14 +113,14 @@
             'el-tabs__item': true,
             'is-active': currentName === tab.index,
             'is-disabled': tab.disabled,
-            'is-closable': closable
+            'is-closable': tab.isClosable
           },
           ref: 'tabs',
           refInFor: true,
           on: { click: (ev) => { handleTabClick(tab, ev); } }
         }, [
-          tab.label,
-          closable ? btnClose : null,
+          tab.labelContent ? tab.labelContent.call(this._renderProxy, h) : tab.label,
+          tab.isClosable ? btnClose : null,
           index === 0 ? activeBar : null
         ]);
         return _tab;

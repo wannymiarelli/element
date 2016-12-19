@@ -100,6 +100,44 @@ describe('Tabs', () => {
 
     expect(vm.$el.classList.contains('el-tabs--border-card')).to.be.true;
   });
+  it('dynamic', (done) => {
+    vm = createVue({
+      template: `
+        <el-tabs type="card" ref="tabs">
+          <el-tab-pane :label="tab.label" :name="tab.name" v-for="tab in tabs">Test Content</el-tab-pane>
+        </el-tabs>
+      `,
+      data() {
+        return {
+          tabs: [{
+            label: 'tab1',
+            name: 'tab1'
+          }, {
+            label: 'tab2',
+            name: 'tab2'
+          }, {
+            label: 'tab3',
+            name: 'tab3'
+          }, {
+            label: 'tab4',
+            name: 'tab4'
+          }]
+        };
+      }
+    }, true);
+
+    setTimeout(() => {
+      expect(vm.$el.querySelectorAll('.el-tab-pane').length).to.equal(4);
+      vm.tabs.push({
+        label: 'tab5',
+        name: 'tab5'
+      });
+      setTimeout(() => {
+        expect(vm.$el.querySelectorAll('.el-tab-pane').length).to.equal(5);
+        done();
+      });
+    }, 100);
+  });
   it('closable', done => {
     vm = createVue({
       template: `
@@ -128,6 +166,23 @@ describe('Tabs', () => {
         expect(paneList[0].innerText.trim()).to.be.equal('A');
         done();
       });
+    }, 100);
+  });
+  it('closable in tab-pane', (done) => {
+    vm = createVue({
+      template: `
+        <el-tabs type="card" ref="tabs">
+          <el-tab-pane label="用户管理" closable>A</el-tab-pane>
+          <el-tab-pane label="配置管理">B</el-tab-pane>
+          <el-tab-pane label="角色管理" closable>C</el-tab-pane>
+          <el-tab-pane label="定时任务补偿">D</el-tab-pane>
+        </el-tabs>
+      `
+    }, true);
+
+    setTimeout(() => {
+      expect(vm.$el.querySelectorAll('.el-icon-close').length).to.equal(2);
+      done();
     }, 100);
   });
   it('closable edge', done => {
@@ -164,5 +219,48 @@ describe('Tabs', () => {
         });
       });
     }, 100);
+  });
+  it('tab title render function', done => {
+    vm = createVue({
+      template: `
+        <el-tabs ref="tabs" >
+          <el-tab-pane :label-content="renderTitle">A</el-tab-pane>
+          <el-tab-pane label="配置管理">B</el-tab-pane>
+          <el-tab-pane label="角色管理" ref="pane-click">C</el-tab-pane>
+          <el-tab-pane label="定时任务补偿">D</el-tab-pane>
+        </el-tabs>
+      `,
+      methods: {
+        renderTitle(h) {
+          return <span>用户管理</span>;
+        }
+      }
+    }, true);
+    vm.$nextTick(_ => {
+      expect(vm.$el.querySelector('.el-tabs__item span').innerText).to.equal('用户管理');
+      done();
+    });
+  });
+  it('disabled', done => {
+    vm = createVue({
+      template: `
+        <el-tabs type="card">
+          <el-tab-pane label="用户管理">A</el-tab-pane>
+          <el-tab-pane disabled label="配置管理" ref="disabled">B</el-tab-pane>
+          <el-tab-pane label="角色管理">C</el-tab-pane>
+          <el-tab-pane label="定时任务补偿">D</el-tab-pane>
+        </el-tabs>
+      `
+    }, true);
+
+    vm.$nextTick(_ => {
+      let tabList = vm.$el.querySelector('.el-tabs__header').children;
+
+      tabList[1].click();
+      vm.$nextTick(_ => {
+        expect(tabList[1].classList.contains('is-active')).to.not.true;
+        done();
+      });
+    });
   });
 });

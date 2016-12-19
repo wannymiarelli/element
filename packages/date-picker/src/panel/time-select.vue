@@ -1,5 +1,5 @@
 <template>
-  <transition name="md-fade-bottom" @after-leave="$emit('dodestroy')">
+  <transition name="el-zoom-in-top" @after-leave="$emit('dodestroy')">
     <div
       v-show="visible"
       :style="{ width: width + 'px' }"
@@ -84,7 +84,7 @@
       },
 
       handleClear() {
-        this.$emit('pick');
+        this.$emit('pick', '');
       }
     },
 
@@ -113,7 +113,7 @@
           while (compareTime(current, end) <= 0) {
             result.push({
               value: current,
-              disabled: compareTime(current, this.minTime || '00:00') <= 0
+              disabled: compareTime(current, this.minTime || '-1:-1') <= 0
             });
             current = nextTime(current, step);
           }

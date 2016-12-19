@@ -4,7 +4,9 @@
     size ? 'el-input--' + size : '',
     {
       'is-disabled': disabled,
-      'el-input-group': $slots.prepend || $slots.append
+      'el-input-group': $slots.prepend || $slots.append,
+      'el-input-group--append': $slots.append,
+      'el-input-group--prepend': $slots.prepend
     }
   ]">
     <template v-if="type !== 'textarea'">
@@ -13,7 +15,9 @@
         <slot name="prepend"></slot>
       </div>
       <!-- input 图标 -->
-      <i class="el-input__icon" :class="[icon ? 'el-icon-' + icon : '']" v-if="icon" @click="handleIconClick"></i>
+      <slot name="icon">
+        <i class="el-input__icon" :class="'el-icon-' + icon" v-if="icon" @click="handleIconClick"></i>
+      </slot>
       <input
         v-if="type !== 'textarea'"
         class="el-input__inner"
@@ -68,6 +72,8 @@
   export default {
     name: 'ElInput',
 
+    componentName: 'ElInput',
+
     mixins: [emitter],
 
     props: {
@@ -105,7 +111,7 @@
     methods: {
       handleBlur(event) {
         this.$emit('blur', event);
-        this.dispatch('form-item', 'el.form.blur', [this.currentValue]);
+        this.dispatch('ElFormItem', 'el.form.blur', [this.currentValue]);
       },
       inputSelect() {
         this.$refs.input.select();
@@ -148,7 +154,7 @@
 
     computed: {
       validating() {
-        return this.$parent.validating;
+        return this.$parent.validateState === 'validating';
       }
     },
 
@@ -162,7 +168,7 @@
         });
         this.$emit('input', val);
         this.$emit('change', val);
-        this.dispatch('form-item', 'el.form.change', [val]);
+        this.dispatch('ElFormItem', 'el.form.change', [val]);
       }
     }
   };

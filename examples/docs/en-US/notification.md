@@ -46,6 +46,14 @@
         });
       },
 
+      open7() {
+        this.$notify.success({
+          title: 'Success',
+          message: 'This is a success message',
+          offset: 100
+        });
+      },
+
       onClose() {
         console.log('Notification is closed');
       }
@@ -65,12 +73,12 @@ Displays a global notification message at the upper right corner of the page.
 <template>
   <el-button
     plain
-    @click.native="open">
+    @click="open">
     Closes automatically
   </el-button>
   <el-button
     plain
-    @click.native="open2">
+    @click="open2">
     Won't close automatically
     </el-button>
 </template>
@@ -107,22 +115,22 @@ We provide four types: success, warning, info and error.
 <template>
   <el-button
     plain
-    @click.native="open3">
+    @click="open3">
     Success
   </el-button>
   <el-button
     plain
-    @click.native="open4">
+    @click="open4">
     Warning
   </el-button>
   <el-button
     plain
-    @click.native="open5">
+    @click="open5">
     Info
   </el-button>
   <el-button
     plain
-    @click.native="open6">
+    @click="open6">
     Error
   </el-button>
 </template>
@@ -165,6 +173,35 @@ We provide four types: success, warning, info and error.
 ```
 :::
 
+### With offset
+
+Customize Notification's offset from the top edge of the screen
+
+::: demo Set the `offset` attribute to customize Notification's offset from the top edge of the screen. Note that every Notification instance of the same moment should have the same offset.
+```html
+<template>
+  <el-button
+      plain
+      @click="open7">
+    Notification with offset
+  </el-button>
+</template>
+
+<script>
+  export default {
+    methods: {
+      open7() {
+        this.$notify.success({
+          title: 'Success',
+          message: 'This is a success message',
+          offset: 100
+        });
+      }
+    }
+  }
+</script>
+```
+
 ### Global method
 
 Element has added a global method `$notify` for Vue.prototype. So in a vue instance you can call `Notification` like what we did in this page.
@@ -185,8 +222,11 @@ In this case you should call `Notification(options)`. We have also registered me
 | title | title | string | — | — |
 | message | description text | string | — | — |
 | type | notification type | string | success/warning/info/error | — |
+| iconClass | custom icon's class. It will be overridden by `type` | string | — | — |
+| customClass | custom class name for Notification | string | — | — |
 | duration | duration before close. It will not automatically close if set 0 | number | — | 4500 |
 | onClose | callback function when closed | function | — | — |
+| offset | offset from the top edge of the screen. Every Notification instance of the same moment should have the same offset | number | — | 0 |
 
 ### Methods
 `Notification` and `this.$notify` returns the current Message instance. To manually close the instance, you can call `close` on it.

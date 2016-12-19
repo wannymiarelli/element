@@ -1,9 +1,16 @@
 <template>
   <div class="el-table"
-    :class="{ 'el-table--fit': fit, 'el-table--striped': stripe, 'el-table--border': border }"
+    :class="{
+      'el-table--fit': fit,
+      'el-table--striped': stripe,
+      'el-table--border': border,
+      'el-table--fluid-height': maxHeight,
+      'el-table--enable-row-hover': !store.states.isComplex,
+      'el-table--enable-row-transition': true || (store.states.data || []).length !== 0 && (store.states.data || []).length < 100
+    }"
     @mouseleave="handleMouseLeave($event)">
     <div class="hidden-columns" ref="hiddenColumns"><slot></slot></div>
-    <div class="el-table__header-wrapper" ref="headerWrapper">
+    <div class="el-table__header-wrapper" ref="headerWrapper" v-if="showHeader">
       <table-header
         :store="store"
         :layout="layout"
@@ -11,26 +18,27 @@
         :style="{ width: layout.bodyWidth ? layout.bodyWidth + 'px' : '' }">
       </table-header>
     </div>
-    <div class="el-table__body-wrapper" ref="bodyWrapper"
-      :style="{ height: layout.bodyHeight ? layout.bodyHeight + 'px' : '' }">
+    <div class="el-table__body-wrapper" ref="bodyWrapper" :style="[bodyHeight]">
       <table-body
+        :context="context"
         :store="store"
         :layout="layout"
         :row-class-name="rowClassName"
+        :row-style="rowStyle"
         :highlight="highlightCurrentRow"
         :style="{ width: layout.bodyWidth ? layout.bodyWidth - (layout.scrollY ? layout.gutterWidth : 0 ) + 'px' : '' }">
       </table-body>
       <div class="el-table__empty-block" v-if="!data || data.length === 0">
-        <span class="el-table__empty-text">{{ emptyText }}</span>
+      <span class="el-table__empty-text"><slot name="empty">{{ emptyText || t('el.table.emptyText') }}</slot></span>
       </div>
     </div>
     <div class="el-table__fixed" ref="fixedWrapper"
-      :style="{
-        width: layout.fixedWidth ? layout.fixedWidth + 'px' : '',
-        height: layout.viewportHeight ? layout.viewportHeight + 'px' : ''
-      }">
-      <div class="el-table__fixed-header-wrapper" ref="fixedHeaderWrapper"
-        v-if="fixedColumns.length > 0">
+      v-if="fixedColumns.length > 0"
+      :style="[
+        { width: layout.fixedWidth ? layout.fixedWidth + 'px' : '' },
+        fixedHeight
+      ]">
+      <div class="el-table__fixed-header-wrapper" ref="fixedHeaderWrapper" v-if="showHeader">
         <table-header
           fixed="left"
           :border="border"
@@ -39,29 +47,29 @@
           :style="{ width: layout.fixedWidth ? layout.fixedWidth + 'px' : '' }"></table-header>
       </div>
       <div class="el-table__fixed-body-wrapper" ref="fixedBodyWrapper"
-        v-if="fixedColumns.length > 0"
-        :style="{
-          top: layout.headerHeight + 'px',
-          height: layout.fixedBodyHeight ? layout.fixedBodyHeight + 'px' : ''
-        }">
+        :style="[
+          { top: layout.headerHeight + 'px' },
+          fixedBodyHeight
+        ]">
         <table-body
           fixed="left"
           :store="store"
           :layout="layout"
           :highlight="highlightCurrentRow"
           :row-class-name="rowClassName"
+          :row-style="rowStyle"
           :style="{ width: layout.fixedWidth ? layout.fixedWidth + 'px' : '' }">
         </table-body>
       </div>
     </div>
     <div class="el-table__fixed-right" ref="rightFixedWrapper"
-      :style="{
-        width: layout.rightFixedWidth ? layout.rightFixedWidth + 'px' : '',
-        height: layout.viewportHeight ? layout.viewportHeight + 'px' : '',
-        right: layout.scrollY ? layout.gutterWidth + 'px' : ''
-      }">
-      <div class="el-table__fixed-header-wrapper" ref="rightFixedHeaderWrapper"
-        v-if="rightFixedColumns.length > 0">
+      v-if="rightFixedColumns.length > 0"
+      :style="[
+        { width: layout.rightFixedWidth ? layout.rightFixedWidth + 'px' : '' },
+        { right: layout.scrollY ? (border ? layout.gutterWidth : (layout.gutterWidth || 1)) + 'px' : '' },
+        fixedHeight
+      ]">
+      <div class="el-table__fixed-header-wrapper" ref="rightFixedHeaderWrapper" v-if="showHeader">
         <table-header
           fixed="right"
           :border="border"
@@ -70,31 +78,35 @@
           :style="{ width: layout.rightFixedWidth ? layout.rightFixedWidth + 'px' : '' }"></table-header>
       </div>
       <div class="el-table__fixed-body-wrapper" ref="rightFixedBodyWrapper"
-        v-if="rightFixedColumns.length > 0"
-        :style="{
-          top: layout.headerHeight + 'px',
-          height: layout.fixedBodyHeight ? layout.fixedBodyHeight + 'px' : ''
-        }">
+        :style="[
+          { top: layout.headerHeight + 'px' },
+          fixedBodyHeight
+        ]">
         <table-body
           fixed="right"
           :store="store"
           :layout="layout"
           :row-class-name="rowClassName"
+          :row-style="rowStyle"
           :highlight="highlightCurrentRow"
           :style="{ width: layout.rightFixedWidth ? layout.rightFixedWidth + 'px' : '' }">
         </table-body>
       </div>
     </div>
+    <div class="el-table__fixed-right-patch"
+      v-if="rightFixedColumns.length > 0"
+      :style="{ width: layout.scrollY ? layout.gutterWidth + 'px' : '0', height: layout.headerHeight + 'px' }"></div>
     <div class="el-table__column-resize-proxy" ref="resizeProxy" v-show="resizeProxyVisible"></div>
   </div>
 </template>
 
 <script type="text/babel">
+  import ElCheckbox from 'element-ui/packages/checkbox';
   import Migrating from 'element-ui/src/mixins/migrating';
   import throttle from 'throttle-debounce/throttle';
   import debounce from 'throttle-debounce/debounce';
   import { addResizeListener, removeResizeListener } from 'element-ui/src/utils/resize-event';
-  import { t } from 'element-ui/src/locale';
+  import Locale from 'element-ui/src/mixins/locale';
   import TableStore from './table-store';
   import TableLayout from './table-layout';
   import TableBody from './table-body';
@@ -106,7 +118,7 @@
   export default {
     name: 'el-table',
 
-    mixins: [Migrating],
+    mixins: [Migrating, Locale],
 
     props: {
       data: {
@@ -120,6 +132,8 @@
 
       height: [String, Number],
 
+      maxHeight: [String, Number],
+
       fit: {
         type: Boolean,
         default: true
@@ -131,19 +145,26 @@
 
       rowKey: [String, Function],
 
+      context: {},
+
+      showHeader: {
+        type: Boolean,
+        default: true
+      },
+
       rowClassName: [String, Function],
+
+      rowStyle: [Object, Function],
 
       highlightCurrentRow: Boolean,
 
-      emptyText: {
-        type: String,
-        default: t('el.table.emptyText')
-      }
+      emptyText: String
     },
 
     components: {
       TableHeader,
-      TableBody
+      TableBody,
+      ElCheckbox
     },
 
     methods: {
@@ -167,6 +188,7 @@
 
       toggleRowSelection(row, selected) {
         this.store.toggleRowSelection(row, selected);
+        this.store.updateAllSelected();
       },
 
       clearSelection() {
@@ -186,20 +208,22 @@
         const { bodyWrapper, headerWrapper } = this.$refs;
         const refs = this.$refs;
         bodyWrapper.addEventListener('scroll', function() {
-          headerWrapper.scrollLeft = this.scrollLeft;
+          if (headerWrapper) headerWrapper.scrollLeft = this.scrollLeft;
           if (refs.fixedBodyWrapper) refs.fixedBodyWrapper.scrollTop = this.scrollTop;
           if (refs.rightFixedBodyWrapper) refs.rightFixedBodyWrapper.scrollTop = this.scrollTop;
         });
 
-        mousewheel(headerWrapper, throttle(16, function(event) {
-          const deltaX = event.deltaX;
+        if (headerWrapper) {
+          mousewheel(headerWrapper, throttle(16, function(event) {
+            const deltaX = event.deltaX;
 
-          if (deltaX > 0) {
-            bodyWrapper.scrollLeft = bodyWrapper.scrollLeft + 10;
-          } else {
-            bodyWrapper.scrollLeft = bodyWrapper.scrollLeft - 10;
-          }
-        }));
+            if (deltaX > 0) {
+              bodyWrapper.scrollLeft = bodyWrapper.scrollLeft + 10;
+            } else {
+              bodyWrapper.scrollLeft = bodyWrapper.scrollLeft - 10;
+            }
+          }));
+        }
 
         if (this.fit) {
           this.windowResizeListener = throttle(50, () => {
@@ -216,6 +240,8 @@
         this.$nextTick(() => {
           if (this.height) {
             this.layout.setHeight(this.height);
+          } else if (this.maxHeight) {
+            this.layout.setMaxHeight(this.maxHeight);
           } else if (this.shouldUpdateHeight) {
             this.layout.updateHeight();
           }
@@ -253,6 +279,60 @@
 
       rightFixedColumns() {
         return this.store.states.rightFixedColumns;
+      },
+
+      bodyHeight() {
+        let style = {};
+
+        if (this.height) {
+          style = {
+            height: this.layout.bodyHeight ? this.layout.bodyHeight + 'px' : ''
+          };
+        } else if (this.maxHeight) {
+          style = {
+            'max-height': (this.showHeader ? this.maxHeight - this.layout.headerHeight : this.maxHeight) + 'px'
+          };
+        }
+
+        return style;
+      },
+
+      fixedBodyHeight() {
+        let style = {};
+
+        if (this.height) {
+          style = {
+            height: this.layout.fixedBodyHeight ? this.layout.fixedBodyHeight + 'px' : ''
+          };
+        } else if (this.maxHeight) {
+          let maxHeight = this.layout.scrollX ? this.maxHeight - this.layout.gutterWidth : this.maxHeight;
+
+          if (this.showHeader) {
+            maxHeight -= this.layout.headerHeight;
+          }
+
+          style = {
+            'max-height': maxHeight + 'px'
+          };
+        }
+
+        return style;
+      },
+
+      fixedHeight() {
+        let style = {};
+
+        if (this.maxHeight) {
+          style = {
+            bottom: (this.layout.scrollX && this.data.length) ? this.layout.gutterWidth + 'px' : ''
+          };
+        } else {
+          style = {
+            height: this.layout.viewportHeight ? this.layout.viewportHeight + 'px' : ''
+          };
+        }
+
+        return style;
       }
     },
 
@@ -287,7 +367,8 @@
       const layout = new TableLayout({
         store,
         table: this,
-        fit: this.fit
+        fit: this.fit,
+        showHeader: this.showHeader
       });
       return {
         store,
